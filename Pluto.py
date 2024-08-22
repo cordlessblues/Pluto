@@ -30,10 +30,9 @@ match platform.system():
 
 class GlobalVars:
     IsSettingsWindowOpen = 0
-    Classes = []
     WindowSize = (298, 252)
     DebugBit = 1
-    LabelCount = 8
+    LabelCount = 12
     ConfigState = 1
     VersionNumber = 1.0
     CurrentDay = ""
@@ -47,10 +46,33 @@ with open(str(FileName), "r") as f:
         print("SavedDate: "+str(GlobalVars.data["SavedDate"]))
         print("SystemDate: "+str(datetime.datetime.now().date()))
 
+class data():
+    def getClass(i):
+        Classes = GlobalVars.data["Classes"]
+        CurrentDay = GlobalVars.data["CurrentDay"]
+        Schedule = GlobalVars.data["Days"][CurrentDay]["Schedule"]
+        key = Schedule[str(i)]
+        Class = Classes[key]
+        return(Class)
+    def getSchedule():
+        CurrentDay = GlobalVars.data["CurrentDay"]
+        Schedule = GlobalVars.data["Days"][CurrentDay]["Schedule"]
+        return(Schedule)
+    def getTimes(i,operator=1 or 2):
+        CurrentDay = GlobalVars.data["CurrentDay"]
+        Schedule = GlobalVars.data["Days"][CurrentDay]["Schedule"]
+        BellTimes = GlobalVars.data["Days"][CurrentDay]["Times"]
+        key = Schedule[str(i)]
+        if operator == 1: Time = BellTimes[key]["Start"]
+        if operator == 2: Time = BellTimes[key]["End"]
+        return(Time)
+
+
+
 def GetDeltaTime(d):
     CurrentTime = datetime.datetime.strptime(str(datetime.datetime.now().time().isoformat()), "%H:%M:%S.%f")
-    EndTime = datetime.datetime.strptime(str(datetime.datetime.strptime((GlobalVars.data["Days"][GlobalVars.data["CurrentDay"]]["Classes"][str(d)]["EndTime"]),"%I:%M %p",)),"%Y-%d-%m %H:%M:%S",)
-    StartTime = datetime.datetime.strptime(str(datetime.datetime.strptime((GlobalVars.data["Days"][GlobalVars.data["CurrentDay"]]["Classes"][str(d)]["StartTime"]),"%I:%M %p",)), "%Y-%d-%m %H:%M:%S")
+    EndTime = datetime.datetime.strptime(str(datetime.datetime.strptime((data.getTimes(d,2)),"%I:%M %p",)),"%Y-%d-%m %H:%M:%S",)
+    StartTime = datetime.datetime.strptime(str(datetime.datetime.strptime((data.getTimes(d,1)),"%I:%M %p",)), "%Y-%d-%m %H:%M:%S")
     if CurrentTime - EndTime > datetime.timedelta(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0):          DeltaTime = "Done"
     elif CurrentTime - EndTime < datetime.timedelta(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0):        DeltaTime = "Time left: " + str((EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))
     if CurrentTime < StartTime:                                                                DeltaTime = "Time Until: " + str(((StartTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (StartTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0)))
@@ -100,10 +122,10 @@ class MainApp(QWidget):
 
     def UpdateLabels(x=1):
         if GlobalVars.CurrentDay != '':
-            for i in range(len(GlobalVars.data["Days"][GlobalVars.CurrentDay]["Classes"])):
-                MainApp.ClassLabels[i].setText(GlobalVars.data["Days"][GlobalVars.CurrentDay]["Classes"][str(i)]["Name"]+ " | "+ str(GetDeltaTime(i)[1]))
+            for i in range(len(data.getSchedule())):
+                MainApp.ClassLabels[i].setText(data.getClass(i)+ " | "+ str(GetDeltaTime(i)[1]))
                 MainApp.ClassLabels[i].show()
-            for i in range(GlobalVars.LabelCount- (GlobalVars.LabelCount - len(GlobalVars.data["Days"][GlobalVars.CurrentDay]["Classes"])),GlobalVars.LabelCount,):
+            for i in range(GlobalVars.LabelCount- (GlobalVars.LabelCount - len(data.getSchedule())),GlobalVars.LabelCount,):
                 MainApp.ClassLabels[i].hide()
         else:
             for i in range(GlobalVars.LabelCount):
