@@ -2,7 +2,7 @@ import datetime, sys, platform, json, os
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QLabel, QApplication, QTableWidget, QPushButton, QSystemTrayIcon)
+from PySide6.QtWidgets import (QVBoxLayout,QMenu , QHBoxLayout, QWidget, QLabel, QApplication, QTableWidget, QPushButton, QSystemTrayIcon)
 from pathlib import Path
 import faulthandler ;faulthandler.enable()
 
@@ -29,14 +29,11 @@ match platform.system():
         os.chdir(ParentPath)
 
 class GlobalVars:
-    IsSettingsWindowOpen = 0
     WindowSize = (298, 252)
     DebugBit = 1
     LabelCount = 12
     ConfigState = 1
-    VersionNumber = 1.0
-    CurrentDay = ""
-    data = ""
+    VersionNumber = 2.0
 
 with open(str(FileName), "r") as f:
     GlobalVars.data = json.load(f)
@@ -67,8 +64,6 @@ class data():
         if operator == 2: Time = BellTimes[key]["End"]
         return(Time)
 
-
-
 def GetDeltaTime(d):
     CurrentTime = datetime.datetime.strptime(str(datetime.datetime.now().time().isoformat()), "%H:%M:%S.%f")
     EndTime = datetime.datetime.strptime(str(datetime.datetime.strptime((data.getTimes(d,2)),"%I:%M %p",)),"%Y-%d-%m %H:%M:%S",)
@@ -78,48 +73,42 @@ def GetDeltaTime(d):
     if CurrentTime < StartTime:                                                                DeltaTime = "Time Until: " + str(((StartTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (StartTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0)))
     return [CurrentTime, DeltaTime]
 
+
+
 class MainApp(QWidget):
     def __init__(self, parent=None):
         super(MainApp, self).__init__(parent)
         timer = QTimer(self)
         timer.timeout.connect(MainApp.UpdateLabels)
         timer.start(250)
-        MainApp.table = QTableWidget()
         MainApp.Question = QLabel("Config File Not Found please select the day", alignment=Qt.AlignBottom)
         MainApp.Question.hide()
         MainApp.ClassLabels = []
-        MainApp.SettingsButton = QPushButton("Settings")
-        MainApp.AboutButton = QPushButton("About")
         main_widget = QWidget()
-        menu_widget = QWidget()
         content_layout = QVBoxLayout()
-        menu_layout = QVBoxLayout()
         for i in range(GlobalVars.LabelCount):
             MainApp.ClassLabels.append(QLabel("", alignment=Qt.AlignmentFlag.AlignCenter))
             content_layout.addWidget(self.ClassLabels[i])
             MainApp.ClassLabels[i].hide()
-        menu_layout.addWidget(self.Question)
-        menu_layout.addWidget(self.SettingsButton)
-        menu_layout.addWidget(self.AboutButton)
+            MainApp.ClassLabels[i].setStyleSheet("QLabel {color : white; }")
         main_widget.setLayout(content_layout)
-        menu_widget.setLayout(menu_layout)
         layout = QHBoxLayout()
-        layout.addWidget(menu_widget, 1)
         layout.addWidget(main_widget, 4)
         self.setLayout(layout)
-        MainApp.SettingsButton.clicked.connect(MainApp.SettingsMenu)
-        MainApp.AboutButton.clicked.connect(MainApp.AboutMenu)
         if (datetime.datetime.strptime(GlobalVars.data["SavedDate"], "%Y-%m-%d").date()== datetime.datetime.now().date()):
             GlobalVars.CurrentDay = GlobalVars.data["CurrentDay"]
+        self.setWindowFlags(Qt.WindowType.Popup)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        
+        
 
     @QtCore.Slot()
     def AboutMenu(self):
         About.__init__(self)
-        #QSystemTrayIcon.showMessage(QSystemTrayIcon(QIcon()),"Pack Up Warning","Warning "+str(GlobalVars.data["Days"][GlobalVars.CurrentDay]["Classes"][str(2)]["Name"])+"",QIcon(),5*1000)
 
-    def SettingsMenu(self):
-        Settings.__init__(self)
-
+    def SystemTray(self):
+        systemTray.__init__(self)
+        
     def UpdateLabels(x=1):
         if GlobalVars.CurrentDay != '':
             for i in range(len(data.getSchedule())):
@@ -132,29 +121,31 @@ class MainApp(QWidget):
                 MainApp.ClassLabels[i].hide()
 
 
-class Settings(QWidget):
-    def __init__(self, parent=MainApp):
-        Settings.Window = QWidget()
-        Settings.Layout = QVBoxLayout()
-        Settings.Disclaimer = QLabel("Settings is a work in progress", alignment=Qt.AlignmentFlag.AlignCenter)
-        Settings.buttonA = QPushButton("A")
-        Settings.buttonB = QPushButton("B")
-        Settings.buttonC = QPushButton("C")
-        Settings.buttonA.clicked.connect(lambda: ButtonClicked("A"))
-        Settings.buttonC.clicked.connect(lambda: ButtonClicked("C"))
-        Settings.buttonB.clicked.connect(lambda: ButtonClicked("B"))
-        Settings.Layout.addWidget(Settings.Disclaimer)
-        Settings.Layout.addWidget(Settings.buttonA)
-        Settings.Layout.addWidget(Settings.buttonB)
-        Settings.Layout.addWidget(Settings.buttonC)
-        Settings.Window.setLayout(Settings.Layout)
-        GlobalVars.IsSettingsWindowOpen = 1
-        Settings.Window.show()
-
-    #class NotificationManager(self=QSystemTrayIcon):
-    #QSystemTrayIcon.showMessage(QSystemTrayIcon(QIcon()),"Pack Up Warning","Warning "+str(GlobalVars.data["Days"][GlobalVars.CurrentDay]["Classes"][str(2)]["Name"])+"",QIcon(),5*1000)
-
-
+class systemTray(QSystemTrayIcon):
+    def __init__(self, parent=None):
+        self.setIcon(QIcon("/home/carl/Documents/repos/pluto/Pluto.png"))
+        self.setToolTip("Pluto")
+        self.showMessage("Test","this is a test")
+        self.menu = QMenu()
+        self.menu.setTitle("What day is it?")
+        self.menu.addAction("A").triggered.connect(lambda: ButtonClicked("A"))
+        self.menu.addAction("B").triggered.connect(lambda: ButtonClicked("C"))
+        self.menu.addAction("C").triggered.connect(lambda: ButtonClicked("B"))
+        self.menu.addSeparator()
+        self.menu.addAction("About Pluto").triggered.connect(MainApp.AboutMenu)
+        self.menu.addSeparator()
+        self.menu.addAction("Exit Pluto").triggered.connect(lambda: Exit())
+        self.setContextMenu(self.menu)
+        self.activated.connect(lambda: StartMain())
+        self.show()
+        
+        def StartMain():
+            if Main.isVisible(): Main.hide()
+            else: Main.show()
+            Right = QApplication.primaryScreen().availableGeometry().right()
+            Top = QApplication.primaryScreen().availableGeometry().top()
+            (Right,Top)
+        
 class About(QWidget):
     def __init__(self, parent=MainApp):
         About.Window = QWidget()
@@ -184,7 +175,10 @@ class About(QWidget):
         About.Layout.addWidget(About.LabelWidget, 1)
         About.Layout.addWidget(About.ItemsWidget, 2)
         About.Window.setLayout(About.Layout)
+        About.Window.setWindowFlags(Qt.WindowType.Popup)
+        About.Window.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         About.Window.show()
+        
 
 def ConfigChecks(Day):
     if GlobalVars.data["SavedDate"] != str(datetime.datetime.now().date()):
@@ -201,19 +195,21 @@ def ConfigChecks(Day):
 def ButtonClicked(Day):
     ConfigChecks(Day)
     GlobalVars.CurrentDay = Day
-    if GlobalVars.IsSettingsWindowOpen == 1:
-        Settings.Window.hide()
-        GlobalVars.IsSettingsWindowOpen = 0
     MainApp.Question.hide()
     MainApp.UpdateLabels()
 
+def Exit():
+    sys.exit()
+
 if __name__ == "__main__":
+    AppState=True
     app = QApplication([])
-    app.setApplicationName("Pluto")
+    app.setStyleSheet("Pluto.stylesheet")
+    tray = QSystemTrayIcon()
     Main = MainApp()
     Main.resize(298, 204)
-    Main.show()
-    if GlobalVars.ConfigState == 0:
-        Settings.__init__(MainApp)
-        Settings.Disclaimer.setText("Today is a new day!" + "\n" + "select todays school schedule")
-    sys.exit(app.exec())
+    app.setApplicationName("Pluto")
+    systemTray.__init__(tray)
+    app.exec()
+
+
