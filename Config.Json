@@ -1,0 +1,123 @@
+{
+    "CurrentDay": "B",
+    "Days": {
+        "A": {
+            "Classes": {
+                "0": {
+                    "EndTime": "9:17 AM",
+                    "Name": "Sports And Fitness",
+                    "StartTime": "8:28 AM"
+                },
+                "1": {
+                    "EndTime": "10:12 AM",
+                    "Name": "Art Fundamentals",
+                    "StartTime": "9:23 AM"
+                },
+                "2": {
+                    "EndTime": "11:07 AM",
+                    "Name": "11 Language Arts",
+                    "StartTime": "10:18 AM"
+                },
+                "3": {
+                    "EndTime": "12:32 PM",
+                    "Name": "Math In Careers",
+                    "StartTime": "11:13 AM"
+                },
+                "4": {
+                    "EndTime": "1:27 PM",
+                    "Name": "ASC",
+                    "StartTime": "12:38 PM"
+                },
+                "5": {
+                    "EndTime": "2:22 PM",
+                    "Name": "Biochemistry",
+                    "StartTime": "1:33 PM"
+                },
+                "6": {
+                    "EndTime": "3:17 PM",
+                    "Name": "Psychology",
+                    "StartTime": "2:28 PM"
+                }
+            }
+        },
+        "B": {
+            "Classes": {
+                "0": {
+                    "EndTime": "9:58 AM",
+                    "Name": "Art Fundamentals",
+                    "StartTime": "8:28 AM"
+                },
+                "1": {
+                    "EndTime": "10:44 AM",
+                    "Name": "Math In Careers",
+                    "StartTime": "10:04 AM"
+                },
+                "2": {
+                    "EndTime": "11:19 AM",
+                    "Name": "Lunch",
+                    "StartTime": "10:49 AM"
+                },
+                "3": {
+                    "EndTime": "12:04 PM",
+                    "Name": "Math In Careers",
+                    "StartTime": "11:19 AM"
+                },
+                "4": {
+                    "EndTime": "12:23 PM",
+                    "Name": "Homeroom",
+                    "StartTime": "12:10 PM"
+                },
+                "5": {
+                    "EndTime": "12:59 PM",
+                    "Name": "Ac-Lab 1",
+                    "StartTime": "12:23 PM"
+                },
+                "6": {
+                    "EndTime": "1:41 PM",
+                    "Name": "Ac-Lab 2",
+                    "StartTime": "1:05 PM"
+                },
+                "7": {
+                    "EndTime": "3:17 PM",
+                    "Name": "Biochemistry",
+                    "StartTime": "1:47 PM"
+                }
+            }
+        },
+        "C": {
+            "Classes": {
+                "0": {
+                    "EndTime": "9:58 AM",
+                    "Name": "Sports And Fitness",
+                    "StartTime": "8:28 AM"
+                },
+                "1": {
+                    "EndTime": "10:49 AM",
+                    "Name": "11 Language Arts",
+                    "StartTime": "10:04 AM"
+                },
+                "2": {
+                    "EndTime": "11:19 AM",
+                    "Name": "Lunch",
+                    "StartTime": "10:44 AM"
+                },
+                "3": {
+                    "EndTime": "12:04 PM",
+                    "Name": "11 Language Arts",
+                    "StartTime": "11:19 AM"
+                },
+                "4": {
+                    "EndTime": "1:41 PM",
+                    "Name": "ASC",
+                    "StartTime": "12:10 PM"
+                },
+                "5": {
+                    "EndTime": "3:17 PM",
+                    "Name": "Psychology",
+                    "StartTime": "1:47 PM"
+                }
+            }
+        }
+    },
+    "SavedDate": "2024-04-23"
+}
