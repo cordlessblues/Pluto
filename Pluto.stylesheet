@@ -1,0 +1,2 @@
+QLabel* pLabel = new QLabel;
+pLabel->setStyleSheet("QLabel { color : blue; }");
