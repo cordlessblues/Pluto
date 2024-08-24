@@ -10,6 +10,7 @@ class GlobalVars:
     FilePath = ""
     IconName = ""
     IconPath = ""
+    ParentPath = ""
     CurrentDay = ""
     WindowSize = (298, 252)
     DebugBit = 1
@@ -26,6 +27,7 @@ def LoadConfig():
             GlobalVars.homePath = str(Path.home())
             ConfigDir = "/.config/Pluto/"
             ParentPath = os.path.join(str(Path.home()) + ConfigDir)
+            GlobalVars.ParentPath = os.path.join(str(Path.home()) + ConfigDir)
             GlobalVars.FileName = "Config.Json"
             GlobalVars.IconName = "Pluto.png"
             GlobalVars.IconPath = os.path.join(str(ParentPath) + GlobalVars.IconName)
@@ -39,9 +41,9 @@ def LoadConfig():
             GlobalVars.IconName = "Pluto.png"
             GlobalVars.FilePath = os.path.join(str(ParentPath) + GlobalVars.FileName)
             os.chdir(ParentPath)
+    with open(str(GlobalVars.FileName), "r") as f:
+        GlobalVars.data = json.load(f)
 LoadConfig()
-with open(str(GlobalVars.FileName), "r") as f:
-    GlobalVars.data = json.load(f)
 class data():
     def getClass(i):
         Classes = GlobalVars.data["Classes"]
@@ -62,6 +64,15 @@ class data():
         if operator == 1: Time = BellTimes[key]["Start"]
         if operator == 2: Time = BellTimes[key]["End"]
         return(Time)
+    def GetUserSettings():
+        Transparency = GlobalVars.data["UserSettings"]["Transparency"]
+        PackUpWarning = GlobalVars.data["UserSettings"]["PackUpWarning"]
+        WindowPopupMode = GlobalVars.data["UserSettings"]["WindowPopupMode"]
+        #print(Transparency,PackUpWarning,WindowPopupMode)
+        return(Transparency,PackUpWarning,WindowPopupMode)
+print(data.GetUserSettings()[0])
+print(data.GetUserSettings()[1])
+print(data.GetUserSettings()[2])
 def GetDeltaTime(d):
     CurrentTime = datetime.datetime.strptime(str(datetime.datetime.now().time().isoformat()), "%H:%M:%S.%f")
     EndTime = datetime.datetime.strptime(str(datetime.datetime.strptime((data.getTimes(d,2)),"%I:%M %p",)),"%Y-%d-%m %H:%M:%S",)
@@ -88,15 +99,15 @@ class MainApp(QWidget):
             MainApp.ClassLabels.append(QLabel("", alignment=Qt.AlignmentFlag.AlignCenter))
             content_layout.addWidget(self.ClassLabels[i])
             MainApp.ClassLabels[i].hide()
-            MainApp.ClassLabels[i].setStyleSheet("QLabel {color : white; }")
+            if data.GetUserSettings()[1] == "True": MainApp.ClassLabels[i].setStyleSheet("QLabel {color : white; }")
         main_widget.setLayout(content_layout)
         layout = QHBoxLayout()
         layout.addWidget(main_widget, 4)
         self.setLayout(layout)
         if (datetime.datetime.strptime(GlobalVars.data["SavedDate"], "%Y-%m-%d").date()== datetime.datetime.now().date()):
             GlobalVars.CurrentDay = GlobalVars.data["CurrentDay"]
-        self.setWindowFlags(Qt.WindowType.Popup)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        if data.GetUserSettings()[2] == "True": self.setWindowFlags(Qt.WindowType.Popup)
+        if data.GetUserSettings()[1] == "True": self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
     @QtCore.Slot()
     def AboutMenu(self):
         About.__init__(self)
@@ -119,20 +130,29 @@ class systemTray(QSystemTrayIcon):
         self.showMessage("Test","this is a test")
         self.ClassEndTimer = QTimer(self)
         self.ClassEndTimer.timeout.connect(lambda: CheckTime())
-        self.ClassEndTimer.start(1000)
+        if data.GetUserSettings()[1]: self.ClassEndTimer.start(1000)
         self.menu = QMenu()
         self.menu.setTitle("What day is it?")
         self.menu.addAction("A").triggered.connect(lambda: ButtonClicked("A"))
         self.menu.addAction("B").triggered.connect(lambda: ButtonClicked("C"))
         self.menu.addAction("C").triggered.connect(lambda: ButtonClicked("B"))
         self.menu.addSeparator()
+        #Transparency,PackUpWarning,WindowPopupMode
+        self.menu.addAction("Toggle Transparency").triggered.connect(lambda: SetConfig(1))
+        self.menu.addAction("Toggle PackUpWarning").triggered.connect(lambda: SetConfig(2))
+        self.menu.addAction("Toggle WindowPopupMode").triggered.connect(lambda: SetConfig(3))
         self.menu.addAction("Reload Config").triggered.connect(lambda: LoadConfig())
         self.menu.addSeparator()
         self.menu.addAction("About Pluto").triggered.connect(MainApp.AboutMenu)
         self.menu.addSeparator()
         self.menu.addAction("Exit Pluto").triggered.connect(lambda: Exit())
         self.setContextMenu(self.menu)
+        self.activated.connect(lambda: StartMain())
         self.show()
+        
+        def StartMain():
+            if Main.isVisible(): Main.hide()
+            else: Main.show()
         def Notify(Title,Message,ExpireTime):
             T=str(Title)
             M=str(Message)
@@ -142,10 +162,48 @@ class systemTray(QSystemTrayIcon):
         Notify("Pluto","Your system Supports Notifications.",2)
         def CheckTime():
             for i in range(len(data.getSchedule())):
-                print(data.getClass(i))
                 if GetDeltaTime(i)[2] < datetime.timedelta(0.0, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0):
                     Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3],999)#"Warning "+str(GlobalVars.data["Days"][GlobalVars.CurrentDay]["Classes"][str(2)]["Name"])+"is ending in:"
-
+        def SetConfig(i):
+            match i:
+                case 1: 
+                    #       Transparency = GlobalVars.data["UserSettings"]["Transparency"]
+                    #       PackUpWarning = GlobalVars.data["UserSettings"]["PackUpWarning"]
+                    #       WindowPopupMode = GlobalVars.data["UserSettings"]["WindowPopupMode"]
+                    if GlobalVars.data["UserSettings"]["Transparency"] == "False":
+                        GlobalVars.data["UserSettings"]["Transparency"] = str("True")
+                        with open(str(GlobalVars.FileName), "w") as f:
+                            json.dump(GlobalVars.data, f)
+                            f.close()
+                    elif GlobalVars.data["UserSettings"]["Transparency"] == "True":
+                        GlobalVars.data["UserSettings"]["Transparency"] = str("False")
+                        with open(str(GlobalVars.FileName), "w") as f:
+                            json.dump(GlobalVars.data, f)
+                            f.close()
+                case 2: 
+                    if GlobalVars.data["UserSettings"]["PackUpWarning"] == "False":
+                        GlobalVars.data["UserSettings"]["PackUpWarning"] = str("True")
+                        with open(str(GlobalVars.FileName), "w") as f:
+                            json.dump(GlobalVars.data, f)
+                            f.close()
+                    elif GlobalVars.data["UserSettings"]["PackUpWarning"] == "True":
+                        GlobalVars.data["UserSettings"]["PackUpWarning"] = str("False")
+                        with open(str(GlobalVars.FileName), "w") as f:
+                            json.dump(GlobalVars.data, f)
+                            f.close()
+                case 3: 
+                    if GlobalVars.data["UserSettings"]["WindowPopupMode"] == "False":
+                        GlobalVars.data["UserSettings"]["WindowPopupMode"] = str("True")
+                        with open(str(GlobalVars.FileName), "w") as f:
+                            json.dump(GlobalVars.data, f)
+                            f.close()
+                    elif GlobalVars.data["UserSettings"]["WindowPopupMode"] == "True":
+                        GlobalVars.data["UserSettings"]["WindowPopupMode"] = str("False")
+                        with open(str(GlobalVars.FileName), "w") as f:
+                            json.dump(GlobalVars.data, f)
+                            f.close()
+            Notify("Pluto","Changes to config wont apply until Pluto has been restarted",1500)
+            LoadConfig()
 class About(QWidget):
     def __init__(self=1, parent=MainApp):
         About.Window = QWidget()
@@ -175,8 +233,8 @@ class About(QWidget):
         About.Layout.addWidget(About.LabelWidget, 1)
         About.Layout.addWidget(About.ItemsWidget, 2)
         About.Window.setLayout(About.Layout)
-        About.Window.setWindowFlags(Qt.WindowType.Popup)
-        About.Window.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        if data.GetUserSettings()[2] == "True": About.Window.setWindowFlags(Qt.WindowType.Popup)
+        if data.GetUserSettings()[1] == "True": About.Window.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         About.Window.show()
 def ConfigChecks():
     if GlobalVars.data["SavedDate"] != str(datetime.datetime.now().date()):
@@ -190,7 +248,7 @@ def ConfigChecks():
             json.dump(GlobalVars.data, f)
             f.close()
 def ButtonClicked(Day):
-    ConfigChecks(Day)
+    ConfigChecks()
     GlobalVars.CurrentDay = Day
     MainApp.Question.hide()
     MainApp.UpdateLabels()
