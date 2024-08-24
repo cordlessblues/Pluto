@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Pluto
+Path=/opt/pluto
+Exec=Pluto.py
+Icon=jmemorize
+Terminal=false
