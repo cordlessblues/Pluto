@@ -133,7 +133,7 @@ class systemTray(QSystemTrayIcon):
             M=str(Message)
             E=int(ExpireTime)
             if systemTray.supportsMessages():
-                systemTray.showMessage(self,T, M, QIcon("/home/carl/Documents/repos/pluto/Pluto.png"),ExpireTime)
+                systemTray.showMessage(self,T, M, QIcon(  "/Pluto.png"),ExpireTime)
         Notify("Pluto","Your system Supports Notifications.",2)
         def CheckTime():
             for i in range(len(data.getSchedule())):
