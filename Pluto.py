@@ -68,7 +68,6 @@ class data():
         Transparency = GlobalVars.data["UserSettings"]["Transparency"]
         PackUpWarning = GlobalVars.data["UserSettings"]["PackUpWarning"]
         WindowPopupMode = GlobalVars.data["UserSettings"]["WindowPopupMode"]
-        #print(Transparency,PackUpWarning,WindowPopupMode)
         return(Transparency,PackUpWarning,WindowPopupMode)
 print(data.GetUserSettings()[0])
 print(data.GetUserSettings()[1])
@@ -148,6 +147,7 @@ class systemTray(QSystemTrayIcon):
         self.menu.addAction("Exit Pluto").triggered.connect(lambda: Exit())
         self.setContextMenu(self.menu)
         self.activated.connect(lambda: StartMain())
+        if data.GetUserSettings()[1] == "True": self.menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.show()
         
         def StartMain():
@@ -163,13 +163,10 @@ class systemTray(QSystemTrayIcon):
         def CheckTime():
             for i in range(len(data.getSchedule())):
                 if GetDeltaTime(i)[2] < datetime.timedelta(0.0, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0):
-                    Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3],999)#"Warning "+str(GlobalVars.data["Days"][GlobalVars.CurrentDay]["Classes"][str(2)]["Name"])+"is ending in:"
+                    Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3],999)
         def SetConfig(i):
             match i:
                 case 1: 
-                    #       Transparency = GlobalVars.data["UserSettings"]["Transparency"]
-                    #       PackUpWarning = GlobalVars.data["UserSettings"]["PackUpWarning"]
-                    #       WindowPopupMode = GlobalVars.data["UserSettings"]["WindowPopupMode"]
                     if GlobalVars.data["UserSettings"]["Transparency"] == "False":
                         GlobalVars.data["UserSettings"]["Transparency"] = str("True")
                         with open(str(GlobalVars.FileName), "w") as f:
