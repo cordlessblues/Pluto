@@ -8,6 +8,8 @@ import faulthandler ;faulthandler.enable()
 class GlobalVars:
     FileName = ""
     FilePath = ""
+    IconName = ""
+    IconPath = ""
     CurrentDay = ""
     WindowSize = (298, 252)
     DebugBit = 1
@@ -25,6 +27,8 @@ def LoadConfig():
             ConfigDir = "/.config/Pluto/"
             ParentPath = os.path.join(str(Path.home()) + ConfigDir)
             GlobalVars.FileName = "Config.Json"
+            GlobalVars.IconName = "Pluto.png"
+            GlobalVars.IconPath = os.path.join(str(ParentPath) + GlobalVars.IconName)
             GlobalVars.FilePath = os.path.join(str(ParentPath) + GlobalVars.FileName)
             os.chdir(ParentPath)
         case _:
@@ -32,6 +36,7 @@ def LoadConfig():
             ConfigDir = "/.config/Pluto/"
             ParentPath = os.path.join(str(Path.home()) + ConfigDir)
             GlobalVars.FileName = "Config.Json"
+            GlobalVars.IconName = "Pluto.png"
             GlobalVars.FilePath = os.path.join(str(ParentPath) + GlobalVars.FileName)
             os.chdir(ParentPath)
 LoadConfig()
@@ -109,7 +114,7 @@ class MainApp(QWidget):
                 MainApp.ClassLabels[i].hide()
 class systemTray(QSystemTrayIcon):
     def __init__(self, parent=None):
-        self.setIcon(QIcon("/home/carl/Documents/repos/pluto/Pluto.png"))
+        self.setIcon(QIcon(GlobalVars.IconPath))
         self.setToolTip("Pluto")
         self.showMessage("Test","this is a test")
         self.ClassEndTimer = QTimer(self)
@@ -133,7 +138,7 @@ class systemTray(QSystemTrayIcon):
             M=str(Message)
             E=int(ExpireTime)
             if systemTray.supportsMessages():
-                systemTray.showMessage(self,T, M, QIcon(  "/Pluto.png"),ExpireTime)
+                systemTray.showMessage(self,T, M, QIcon(GlobalVars.IconPath),ExpireTime)
         Notify("Pluto","Your system Supports Notifications.",2)
         def CheckTime():
             for i in range(len(data.getSchedule())):
