@@ -239,14 +239,14 @@ def ConfigChecks():
         with open(str(GlobalVars.FileName), "w") as f:
             json.dump(GlobalVars.data, f)
             f.close()
-    if GlobalVars.data["CurrentDay"] != str(datetime.datetime.now().date()):
-        GlobalVars.data["CurrentDay"] = str(datetime.datetime.now().date())
+    if GlobalVars.data["CurrentDay"] != GlobalVars.CurrentDay:
+        GlobalVars.data["CurrentDay"] = GlobalVars.CurrentDay
         with open(str(GlobalVars.FileName), "w") as f:
             json.dump(GlobalVars.data, f)
             f.close()
 def ButtonClicked(Day):
-    ConfigChecks()
     GlobalVars.CurrentDay = Day
+    ConfigChecks()
     MainApp.Question.hide()
     MainApp.UpdateLabels()
 def Exit():
