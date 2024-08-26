@@ -1,4 +1,4 @@
-import datetime, sys, platform, json, os
+import datetime, sys, platform, json, os, math
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon
@@ -80,7 +80,7 @@ def GetDeltaTime(d):
     elif CurrentTime - EndTime < datetime.timedelta(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0):        
         DeltaTime = "Time left: " + str((EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))
     if CurrentTime < StartTime:                                                                DeltaTime = "Time Until: " + str(((StartTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (StartTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))) 
-    RawDeltaTime = CurrentTime - EndTime
+    RawDeltaTime = (EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0)
     DeltaString = str((EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))
     return [CurrentTime, DeltaTime, RawDeltaTime,DeltaString]
 class MainApp(QWidget):
@@ -135,6 +135,8 @@ class systemTray(QSystemTrayIcon):
         self.menu.addAction("A").triggered.connect(lambda: ButtonClicked("A"))
         self.menu.addAction("B").triggered.connect(lambda: ButtonClicked("C"))
         self.menu.addAction("C").triggered.connect(lambda: ButtonClicked("B"))
+        self.menu.addAction("Late Start").triggered.connect(lambda: ButtonClicked("L"))
+        
         self.menu.addSeparator()
         #Transparency,PackUpWarning,WindowPopupMode
         self.menu.addAction("Toggle Transparency").triggered.connect(lambda: SetConfig(1))
@@ -162,8 +164,10 @@ class systemTray(QSystemTrayIcon):
         Notify("Pluto","Your system Supports Notifications.",2)
         def CheckTime():
             for i in range(len(data.getSchedule())):
-                if GetDeltaTime(i)[2] < datetime.timedelta(0.0, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0):
-                    Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3],999)
+                if GetDeltaTime(i)[2] < datetime.timedelta(GetDeltaTime(i)[2].days, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0):
+                    print(GetDeltaTime(i)[2])
+                    if i == (len(data.getSchedule())): d = i-1
+                    Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3] + "\n"+"Your next class is: "+str(data.getClass(i-1)),999)
         def SetConfig(i):
             match i:
                 case 1: 
