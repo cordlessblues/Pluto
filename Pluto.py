@@ -51,6 +51,7 @@ class data():
         Schedule = GlobalVars.data["Days"][CurrentDay]["Schedule"]
         key = Schedule[str(i)]
         Class = Classes[key]
+        if i == 9999: Class = "end of school"
         return(Class)
     def getSchedule():
         CurrentDay = GlobalVars.data["CurrentDay"]
@@ -133,8 +134,8 @@ class systemTray(QSystemTrayIcon):
         self.menu = QMenu()
         self.menu.setTitle("What day is it?")
         self.menu.addAction("A").triggered.connect(lambda: ButtonClicked("A"))
-        self.menu.addAction("B").triggered.connect(lambda: ButtonClicked("C"))
-        self.menu.addAction("C").triggered.connect(lambda: ButtonClicked("B"))
+        self.menu.addAction("B").triggered.connect(lambda: ButtonClicked("B"))
+        self.menu.addAction("C").triggered.connect(lambda: ButtonClicked("C"))
         self.menu.addAction("Late Start").triggered.connect(lambda: ButtonClicked("L"))
         
         self.menu.addSeparator()
@@ -166,8 +167,9 @@ class systemTray(QSystemTrayIcon):
             for i in range(len(data.getSchedule())):
                 if GetDeltaTime(i)[2] < datetime.timedelta(GetDeltaTime(i)[2].days, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0):
                     print(GetDeltaTime(i)[2])
-                    if i == (len(data.getSchedule())): d = i-1
-                    Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3] + "\n"+"Your next class is: "+str(data.getClass(i-1)),999)
+                    if i == (len(data.getSchedule())): d = 9999
+                    else: d=i+1
+                    Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3] + "\n"+"Your next class is: "+str(data.getClass(d)),999)
         def SetConfig(i):
             match i:
                 case 1: 
