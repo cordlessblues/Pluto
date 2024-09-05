@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (QVBoxLayout,QMenu , QHBoxLayout, QWidget, QLabel,
 from pathlib import Path
 import faulthandler ;faulthandler.enable()
 class GlobalVars:
+    SpacingGoal = 0
     FileName = ""
     FilePath = ""
     IconName = ""
@@ -70,16 +71,27 @@ class data():
         PackUpWarning = GlobalVars.data["UserSettings"]["PackUpWarning"]
         WindowPopupMode = GlobalVars.data["UserSettings"]["WindowPopupMode"]
         return(Transparency,PackUpWarning,WindowPopupMode)
-print(data.GetUserSettings()[0])
-print(data.GetUserSettings()[1])
-print(data.GetUserSettings()[2])
+    def GetSpacing(i):
+        Delta = GlobalVars.SpacingGoal - len(list(data.getClass(i)))
+        String=""
+        for d in range(Delta):
+            String = String+" "
+        return(String)
+    def CalculateSpacingGoal():
+        GlobalVars.SpacingGoal = 0
+        for i in range(len(data.getSchedule())):
+            test = len(list(data.getClass(i)))
+            print(test)
+            if test > GlobalVars.SpacingGoal:
+                GlobalVars.SpacingGoal = test
+data.CalculateSpacingGoal()
 def GetDeltaTime(d):
     CurrentTime = datetime.datetime.strptime(str(datetime.datetime.now().time().isoformat()), "%H:%M:%S.%f")
     EndTime = datetime.datetime.strptime(str(datetime.datetime.strptime((data.getTimes(d,2)),"%I:%M %p",)),"%Y-%d-%m %H:%M:%S",)
     StartTime = datetime.datetime.strptime(str(datetime.datetime.strptime((data.getTimes(d,1)),"%I:%M %p",)), "%Y-%d-%m %H:%M:%S")
     if CurrentTime - EndTime > datetime.timedelta(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0):          DeltaTime = "Done"
     elif CurrentTime - EndTime < datetime.timedelta(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0):        
-        DeltaTime = "Time left: " + str((EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))
+        DeltaTime = "Time left:  " + str((EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))
     if CurrentTime < StartTime:                                                                DeltaTime = "Time Until: " + str(((StartTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (StartTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))) 
     RawDeltaTime = (EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0)
     DeltaString = str((EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))
@@ -90,8 +102,6 @@ class MainApp(QWidget):
         LabelUpdateTimer = QTimer(self)
         LabelUpdateTimer.timeout.connect(MainApp.UpdateLabels)
         LabelUpdateTimer.start(250)
-        MainApp.Question = QLabel("Config File Not Found please select the day", alignment=Qt.AlignBottom)
-        MainApp.Question.hide()
         MainApp.ClassLabels = []
         main_widget = QWidget()
         content_layout = QVBoxLayout()
@@ -102,7 +112,7 @@ class MainApp(QWidget):
             if data.GetUserSettings()[1] == "True": MainApp.ClassLabels[i].setStyleSheet("QLabel {color : white; }")
         main_widget.setLayout(content_layout)
         layout = QHBoxLayout()
-        layout.addWidget(main_widget, 4)
+        layout.addWidget(main_widget, 1)
         self.setLayout(layout)
         if (datetime.datetime.strptime(GlobalVars.data["SavedDate"], "%Y-%m-%d").date()== datetime.datetime.now().date()):
             GlobalVars.CurrentDay = GlobalVars.data["CurrentDay"]
@@ -116,8 +126,12 @@ class MainApp(QWidget):
     def UpdateLabels(x=1):
         if GlobalVars.CurrentDay != '':
             for i in range(len(data.getSchedule())):
-                MainApp.ClassLabels[i].setText(data.getClass(i)+ " | "+ str(GetDeltaTime(i)[1]))
-                MainApp.ClassLabels[i].show()
+                if i == 0:
+                    MainApp.ClassLabels[i].setText(data.getClass(i)+data.GetSpacing(i)+ " | "+ str(GetDeltaTime(i)[1]))
+                    MainApp.ClassLabels[i].show()
+                else:
+                    MainApp.ClassLabels[i].setText(data.getClass(i)+data.GetSpacing(i)+ " | "+ str(GetDeltaTime(i)[1]))
+                    MainApp.ClassLabels[i].show()
             for i in range(GlobalVars.LabelCount- (GlobalVars.LabelCount - len(data.getSchedule())),GlobalVars.LabelCount,):
                 MainApp.ClassLabels[i].hide()
         else:
@@ -137,7 +151,6 @@ class systemTray(QSystemTrayIcon):
         self.menu.addAction("B").triggered.connect(lambda: ButtonClicked("B"))
         self.menu.addAction("C").triggered.connect(lambda: ButtonClicked("C"))
         self.menu.addAction("Late Start").triggered.connect(lambda: ButtonClicked("L"))
-        
         self.menu.addSeparator()
         #Transparency,PackUpWarning,WindowPopupMode
         self.menu.addAction("Toggle Transparency").triggered.connect(lambda: SetConfig(1))
@@ -166,7 +179,6 @@ class systemTray(QSystemTrayIcon):
         def CheckTime():
             for i in range(len(data.getSchedule())):
                 if GetDeltaTime(i)[2] < datetime.timedelta(GetDeltaTime(i)[2].days, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0):
-                    print(GetDeltaTime(i)[2])
                     if i == (len(data.getSchedule())): d = 9999
                     else: d=i+1
                     Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3] + "\n"+"Your next class is: "+str(data.getClass(d)),999)
@@ -253,7 +265,7 @@ def ConfigChecks():
 def ButtonClicked(Day):
     GlobalVars.CurrentDay = Day
     ConfigChecks()
-    MainApp.Question.hide()
+    data.CalculateSpacingGoal()
     MainApp.UpdateLabels()
 def Exit():
     sys.exit()
@@ -261,7 +273,7 @@ if __name__ == "__main__":
     app = QApplication([])
     tray = QSystemTrayIcon()
     Main = MainApp()
-    Main.resize(298, 204)
+    Main.resize(500, 200)
     app.setApplicationName("Pluto")
     systemTray.__init__(tray)
     app.exec()
