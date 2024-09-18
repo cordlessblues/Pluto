@@ -66,11 +66,12 @@ class data():
         if operator == 1: Time = BellTimes[key]["Start"]
         if operator == 2: Time = BellTimes[key]["End"]
         return(Time)
-    def GetUserSettings():
+    def getUserSettings():
         Transparency = GlobalVars.data["UserSettings"]["Transparency"]
         PackUpWarning = GlobalVars.data["UserSettings"]["PackUpWarning"]
         WindowPopupMode = GlobalVars.data["UserSettings"]["WindowPopupMode"]
-        return(Transparency,PackUpWarning,WindowPopupMode)
+        PackUpWarningTime = GlobalVars.data["UserSettings"]["PackUpWarningTime"]
+        return(Transparency,PackUpWarning,WindowPopupMode,PackUpWarningTime)
     def GetSpacing(i):
         Delta = GlobalVars.SpacingGoal - len(list(data.getClass(i)))
         String=""
@@ -109,15 +110,15 @@ class MainApp(QWidget):
             MainApp.ClassLabels.append(QLabel("", alignment=Qt.AlignmentFlag.AlignCenter))
             content_layout.addWidget(self.ClassLabels[i])
             MainApp.ClassLabels[i].hide()
-            if data.GetUserSettings()[1] == "True": MainApp.ClassLabels[i].setStyleSheet("QLabel {color : white; }")
+            if data.getUserSettings()[1] == "True": MainApp.ClassLabels[i].setStyleSheet("QLabel {color : white; }")
         main_widget.setLayout(content_layout)
         layout = QHBoxLayout()
         layout.addWidget(main_widget, 1)
         self.setLayout(layout)
         if (datetime.datetime.strptime(GlobalVars.data["SavedDate"], "%Y-%m-%d").date()== datetime.datetime.now().date()):
             GlobalVars.CurrentDay = GlobalVars.data["CurrentDay"]
-        if data.GetUserSettings()[2] == "True": self.setWindowFlags(Qt.WindowType.Popup)
-        if data.GetUserSettings()[1] == "True": self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        if data.getUserSettings()[2] == "True": self.setWindowFlags(Qt.WindowType.Popup)
+        if data.getUserSettings()[1] == "True": self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
     @QtCore.Slot()
     def AboutMenu(self):
         About.__init__(self)
@@ -144,7 +145,7 @@ class systemTray(QSystemTrayIcon):
         self.showMessage("Test","this is a test")
         self.ClassEndTimer = QTimer(self)
         self.ClassEndTimer.timeout.connect(lambda: CheckTime())
-        if data.GetUserSettings()[1]: self.ClassEndTimer.start(1000)
+        if data.getUserSettings()[1]: self.ClassEndTimer.start(1000)
         self.menu = QMenu()
         self.menu.setTitle("What day is it?")
         self.menu.addAction("A").triggered.connect(lambda: ButtonClicked("A"))
@@ -163,7 +164,7 @@ class systemTray(QSystemTrayIcon):
         self.menu.addAction("Exit Pluto").triggered.connect(lambda: Exit())
         self.setContextMenu(self.menu)
         self.activated.connect(lambda: StartMain())
-        if data.GetUserSettings()[1] == "True": self.menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        if data.getUserSettings()[1] == "True": self.menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.show()
         
         def StartMain():
@@ -178,11 +179,10 @@ class systemTray(QSystemTrayIcon):
         Notify("Pluto","Your system Supports Notifications.",2)
         def CheckTime():
             for i in range(len(data.getSchedule())):
-                if GetDeltaTime(i)[2] < datetime.timedelta(GetDeltaTime(i)[2].days, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0):
-                    if i == (len(data.getSchedule())): d = 9999
-                    else: d=i+1
-                    Notify("Pluto","Warning "+str(data.getClass(i))+" Is ending in "+GetDeltaTime(i)[3] + "\n"+"Your next class is: "+str(data.getClass(d)),999)
-        def SetConfig(i):
+                if GetDeltaTime(i)[2] < datetime.timedelta(GetDeltaTime(i)[2].days, 0.0, 0.0, 0.0, data.getUserSettings()[3], 0.0, 0.0):
+                    if data.getClass(i+1) == "End of School": Notify("Pluto", "Warning School Is ending in " + GetDeltaTime(i)[3], 999)
+                    else: Notify("Pluto", "Warning " + str(data.getClass(i)) + " Is ending in " + GetDeltaTime(i)[3] + "\n" + "Your next class is: "+str(data.getClass(i)), 999)
+        def SetConfig(i,Time=0.0):
             match i:
                 case 1: 
                     if GlobalVars.data["UserSettings"]["Transparency"] == "False":
@@ -248,8 +248,8 @@ class About(QWidget):
         About.Layout.addWidget(About.LabelWidget, 1)
         About.Layout.addWidget(About.ItemsWidget, 2)
         About.Window.setLayout(About.Layout)
-        if data.GetUserSettings()[2] == "True": About.Window.setWindowFlags(Qt.WindowType.Popup)
-        if data.GetUserSettings()[1] == "True": About.Window.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        if data.getUserSettings()[2] == "True": About.Window.setWindowFlags(Qt.WindowType.Popup)
+        if data.getUserSettings()[1] == "True": About.Window.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         About.Window.show()
 def ConfigChecks():
     if GlobalVars.data["SavedDate"] != str(datetime.datetime.now().date()):
