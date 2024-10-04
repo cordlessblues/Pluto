@@ -82,9 +82,10 @@ class data():
         GlobalVars.SpacingGoal = 0
         for i in range(len(data.getSchedule())):
             test = len(list(data.getClass(i)))
-            print(test)
             if test > GlobalVars.SpacingGoal:
                 GlobalVars.SpacingGoal = test
+    def GetDays(i):
+        return(GlobalVars.data["Days"][str(i)]["Name"])
 data.CalculateSpacingGoal()
 def GetDeltaTime(d):
     CurrentTime = datetime.datetime.strptime(str(datetime.datetime.now().time().isoformat()), "%H:%M:%S.%f")
@@ -142,16 +143,19 @@ class systemTray(QSystemTrayIcon):
     def __init__(self, parent=None):
         self.setIcon(QIcon(GlobalVars.IconPath))
         self.setToolTip("Pluto")
-        self.showMessage("Test","this is a test")
         self.ClassEndTimer = QTimer(self)
         self.ClassEndTimer.timeout.connect(lambda: CheckTime())
         if data.getUserSettings()[1]: self.ClassEndTimer.start(1000)
         self.menu = QMenu()
         self.menu.setTitle("What day is it?")
-        self.menu.addAction("A").triggered.connect(lambda: ButtonClicked("A"))
-        self.menu.addAction("B").triggered.connect(lambda: ButtonClicked("B"))
-        self.menu.addAction("C").triggered.connect(lambda: ButtonClicked("C"))
-        self.menu.addAction("Late Start").triggered.connect(lambda: ButtonClicked("L"))
+        #for i in range(len(GlobalVars.data["Days"])): 
+        #    self.menu.addAction(str(i)).triggered.connect(lambda: ButtonClicked(str(i)))
+        #    self.menu.addSeparator()
+        self.menu.addAction("A").triggered.connect(lambda: ButtonClicked("0"))
+        self.menu.addAction("B").triggered.connect(lambda: ButtonClicked("1"))
+        self.menu.addAction("C").triggered.connect(lambda: ButtonClicked("2"))
+        self.menu.addAction("Late Start").triggered.connect(lambda: ButtonClicked("3"))
+        self.menu.addAction("Pep Rally").triggered.connect(lambda: ButtonClicked("4"))
         self.menu.addSeparator()
         #Transparency,PackUpWarning,WindowPopupMode
         self.menu.addAction("Toggle Transparency").triggered.connect(lambda: SetConfig(1))
@@ -181,7 +185,7 @@ class systemTray(QSystemTrayIcon):
             for i in range(len(data.getSchedule())):
                 if GetDeltaTime(i)[2] < datetime.timedelta(GetDeltaTime(i)[2].days, 0.0, 0.0, 0.0, data.getUserSettings()[3], 0.0, 0.0):
                     if data.getClass(i+1) == "End of School": Notify("Pluto", "Warning School Is ending in " + GetDeltaTime(i)[3], 999)
-                    else: Notify("Pluto", "Warning " + str(data.getClass(i)) + " Is ending in " + GetDeltaTime(i)[3] + "\n" + "Your next class is: "+str(data.getClass(i)), 999)
+                    else: Notify("Pluto", "Warning " + str(data.getClass(i)) + " Is ending in " + GetDeltaTime(i)[3] + "\n" + "Your next class is: "+str(data.getClass(i+1)), 999)
         def SetConfig(i,Time=0.0):
             match i:
                 case 1: 
@@ -263,6 +267,7 @@ def ConfigChecks():
             json.dump(GlobalVars.data, f)
             f.close()
 def ButtonClicked(Day):
+    print(Day)
     GlobalVars.CurrentDay = Day
     ConfigChecks()
     data.CalculateSpacingGoal()
@@ -277,5 +282,3 @@ if __name__ == "__main__":
     app.setApplicationName("Pluto")
     systemTray.__init__(tray)
     app.exec()
-
-
