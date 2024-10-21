@@ -1,4 +1,5 @@
 import datetime, sys, platform, json, os, math
+from datemath import datemath # type: ignore
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon
@@ -9,6 +10,8 @@ class GlobalVars:
     SpacingGoal = 0
     FileName = ""
     FilePath = ""
+    CalendarName = ""
+    CalendarPath = ""
     IconName = ""
     IconPath = ""
     ParentPath = ""
@@ -28,23 +31,44 @@ def LoadConfig():
             GlobalVars.homePath = str(Path.home())
             ConfigDir = "/.config/Pluto/"
             ParentPath = os.path.join(str(Path.home()) + ConfigDir)
-            GlobalVars.ParentPath = os.path.join(str(Path.home()) + ConfigDir)
             GlobalVars.FileName = "Config.Json"
+            GlobalVars.CalendarName = "Calendar.Json"
             GlobalVars.IconName = "Pluto.png"
             GlobalVars.IconPath = os.path.join(str(ParentPath) + GlobalVars.IconName)
             GlobalVars.FilePath = os.path.join(str(ParentPath) + GlobalVars.FileName)
+            GlobalVars.CalendarPath = os.path.join(str(ParentPath) + GlobalVars.CalendarName)
             os.chdir(ParentPath)
         case _:
             GlobalVars.homePath = str(Path.home())
             ConfigDir = "/.config/Pluto/"
             ParentPath = os.path.join(str(Path.home()) + ConfigDir)
             GlobalVars.FileName = "Config.Json"
+            GlobalVars.CalendarName = "Calendar.Json"
             GlobalVars.IconName = "Pluto.png"
+            GlobalVars.IconPath = os.path.join(str(ParentPath) + GlobalVars.IconName)
             GlobalVars.FilePath = os.path.join(str(ParentPath) + GlobalVars.FileName)
+            GlobalVars.CalendarPath = os.path.join(str(ParentPath) + GlobalVars.CalendarName)
             os.chdir(ParentPath)
     with open(str(GlobalVars.FileName), "r") as f:
         GlobalVars.data = json.load(f)
+    with open(str(GlobalVars.CalendarName), "r") as f:
+        GlobalVars.Cal = json.load(f)
+    GlobalVars.CurrentDay = str(GlobalVars.Cal[str(datetime.datetime.now().month)][str(datetime.datetime.now().day)])
+    ConfigChecks()
+def ConfigChecks():
+    if GlobalVars.data["SavedDate"] != str(datetime.datetime.now().date()):
+        GlobalVars.data["SavedDate"] = str(datetime.datetime.now().date())
+        with open(str(GlobalVars.FileName), "w") as f:
+            json.dump(GlobalVars.data, f)
+            f.close()
+    if GlobalVars.data["CurrentDay"] != GlobalVars.CurrentDay:
+        print("Changing Current Day")
+        GlobalVars.data["CurrentDay"] = str(GlobalVars.Cal[str(datetime.datetime.now().month)][str(datetime.datetime.now().day)])
+        with open(str(GlobalVars.FileName), "w") as f:
+            json.dump(GlobalVars.data, f)
+            f.close()
 LoadConfig()
+
 class data():
     def getClass(i):
         Classes = GlobalVars.data["Classes"]
@@ -86,6 +110,8 @@ class data():
                 GlobalVars.SpacingGoal = test
     def GetDays(i):
         return(GlobalVars.data["Days"][str(i)]["Name"])
+    def GetCurrentDay():
+        return()
 data.CalculateSpacingGoal()
 def GetDeltaTime(d):
     CurrentTime = datetime.datetime.strptime(str(datetime.datetime.now().time().isoformat()), "%H:%M:%S.%f")
@@ -97,7 +123,10 @@ def GetDeltaTime(d):
     if CurrentTime < StartTime:                                                                DeltaTime = "Time Until: " + str(((StartTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (StartTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))) 
     RawDeltaTime = (EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0)
     DeltaString = str((EndTime - CurrentTime)- datetime.timedelta(0.0, 0.0, (EndTime - CurrentTime).microseconds, 0.0, 0.0, 0.0, 0.0))
-    return [CurrentTime, DeltaTime, RawDeltaTime,DeltaString]
+    if GlobalVars.CurrentDay == "-1":
+        return [CurrentTime, "", datetime.timedelta(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),str(datetime.timedelta(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))]
+    else:
+        return [CurrentTime, DeltaTime, RawDeltaTime,DeltaString]
 class MainApp(QWidget):
     def __init__(self, parent=None):
         super(MainApp, self).__init__(parent)
@@ -116,8 +145,6 @@ class MainApp(QWidget):
         layout = QHBoxLayout()
         layout.addWidget(main_widget, 1)
         self.setLayout(layout)
-        if (datetime.datetime.strptime(GlobalVars.data["SavedDate"], "%Y-%m-%d").date()== datetime.datetime.now().date()):
-            GlobalVars.CurrentDay = GlobalVars.data["CurrentDay"]
         if data.getUserSettings()[2] == "True": self.setWindowFlags(Qt.WindowType.Popup)
         if data.getUserSettings()[1] == "True": self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
     @QtCore.Slot()
@@ -255,17 +282,7 @@ class About(QWidget):
         if data.getUserSettings()[2] == "True": About.Window.setWindowFlags(Qt.WindowType.Popup)
         if data.getUserSettings()[1] == "True": About.Window.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         About.Window.show()
-def ConfigChecks():
-    if GlobalVars.data["SavedDate"] != str(datetime.datetime.now().date()):
-        GlobalVars.data["SavedDate"] = str(datetime.datetime.now().date())
-        with open(str(GlobalVars.FileName), "w") as f:
-            json.dump(GlobalVars.data, f)
-            f.close()
-    if GlobalVars.data["CurrentDay"] != GlobalVars.CurrentDay:
-        GlobalVars.data["CurrentDay"] = GlobalVars.CurrentDay
-        with open(str(GlobalVars.FileName), "w") as f:
-            json.dump(GlobalVars.data, f)
-            f.close()
+
 def ButtonClicked(Day):
     print(Day)
     GlobalVars.CurrentDay = Day
