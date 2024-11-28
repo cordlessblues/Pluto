@@ -197,7 +197,6 @@ class systemTray(QSystemTrayIcon):
         self.activated.connect(lambda: StartMain())
         if data.getUserSettings()[1] == "True": self.menu.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.show()
-        
         def StartMain():
             if Main.isVisible(): Main.hide()
             else: Main.show()
